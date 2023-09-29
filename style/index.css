@@ -1,0 +1,31 @@
+#chessboard {
+    position: absolute;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    width: 40vw;
+    height: 40vw;
+    border: 2px solid black;
+}
+
+.square {
+    margin: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.square img {
+    position: absolute;
+    display: block;
+    width: 5vw;
+    height: 5vw;
+    object-fit: contain;
+}
+
+.light {
+    background-color: #f0d9b5;
+}
+
+.dark {
+    background-color: #b58863
+}
