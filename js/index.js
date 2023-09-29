@@ -81,17 +81,17 @@ function getAvailableSquaresForPawn(pawn, square) {
     let y = parseInt(square.id[1])
     console.log(x)
     console.log(y)
-    let yCoordinateDifference
-    if (getColor(pawn) == 'white') yCoordinateDifference = -1
-    else if (getColor(pawn) == 'black') yCoordinateDifference = 1
+    let yCoordinateDifference = (getColor(pawn) == 'white') ? -1 : 1
     for (i = -1; i <= 1; i += 2)
-        if (chessboard[x + i][y + yCoordinateDifference] !== undefined) {
+    if (chessboard[x + i] != undefined && chessboard[x + i][y + yCoordinateDifference] != undefined) {
+            if (isTherePieceInSquare(chessboard[x + i][y + yCoordinateDifference]) && getColor(chessboard[x + i][y + yCoordinateDifference]) != getColor(pawn))
             result.push(chessboard[x + i][y + yCoordinateDifference])
         }
-    if(chessboard[x][y + yCoordinateDifference] != undefined && !isTherePieceInSquare(chessboard[x][y + yCoordinateDifference]))
+    if(chessboard[x] != undefined && chessboard[x][y + yCoordinateDifference] != undefined && !isTherePieceInSquare(chessboard[x][y + yCoordinateDifference])) {
         result.push(chessboard[x][y + yCoordinateDifference])
-    if (chessboard[x][y + yCoordinateDifference * 2] != undefined)
-        result.push(chessboard[x][y + yCoordinateDifference * 2])
+        if (chessboard[x] != undefined && chessboard[x][y + yCoordinateDifference * 2] != undefined && !isTherePieceInSquare(chessboard[x][y + yCoordinateDifference * 2]))
+            result.push(chessboard[x][y + yCoordinateDifference * 2])
+    }
     return result
 }
 //hay que arreglar
@@ -102,7 +102,6 @@ function getColor(piece) {
 }
 
 function isTherePieceInSquare(square) {
-    if (square == null) return false
     if (square.firstChild == null) return false
     else return true
 }
