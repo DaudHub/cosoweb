@@ -144,16 +144,15 @@ function getAvailableSquaresForBishop(bishop) {
     loopDownRight: for (let i = 0; true; i++) {
         if (chessboard[i] == undefined) break loopDownRight
         else if (chessboard[i][i] == undefined) break loopDownRight
-        else if (getColor(chessboard[i][i].innerChild) == getColor(bishop)) break loopDownRight
-        else if (getColor(chessboard[i][i].innerChild) != getColor(bishop)) {
+        else if (getColor(chessboard[i][i].firstChild) == getColor(bishop)) break loopDownRight
+        else if (getColor(chessboard[i][i].firstChild) != getColor(bishop)) {
             result.push(chessboard[i][i])
             break loopDownRight
         }
-        result.push(chessboard[i][i])
+        else result.push(chessboard[i][i])
     }
-    for (let i = 0; true; i++) {
-        
-    }
+    
+    return result
 }
 
 function getColor(piece) {
