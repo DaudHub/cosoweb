@@ -53,8 +53,10 @@ chessboard.forEach(column => {
         square.addEventListener('drop', event => {
             event.preventDefault()
             let dropped = document.getElementById(event.dataTransfer.getData('text'))
+            console.log(dropped)
             let delegate
             if (dropped.getAttribute('class').split('-')[1] == 'pawn') delegate = checkMoveForPawn
+            else if (dropped.getAttribute('class').split('-')[1] == 'knight') delegate = checkMoveForKnight
             if(delegate(dropped, square)) {
                 if (square.firstChild == null && event.target == square)
                     square.appendChild(dropped)
@@ -82,16 +84,45 @@ function getAvailableSquaresForPawn(pawn, square) {
     console.log(x)
     console.log(y)
     let yCoordinateDifference = (getColor(pawn) == 'white') ? -1 : 1
-    for (i = -1; i <= 1; i += 2)
+    for (let i = -1; i <= 1; i += 2)
     if (chessboard[x + i] != undefined && chessboard[x + i][y + yCoordinateDifference] != undefined) {
-            if (isTherePieceInSquare(chessboard[x + i][y + yCoordinateDifference]) && getColor(chessboard[x + i][y + yCoordinateDifference]) != getColor(pawn))
+        if (isTherePieceInSquare(chessboard[x + i][y + yCoordinateDifference]) && getColor(chessboard[x + i][y + yCoordinateDifference].firstChild) != getColor(pawn))
             result.push(chessboard[x + i][y + yCoordinateDifference])
-        }
+    }
     if(chessboard[x] != undefined && chessboard[x][y + yCoordinateDifference] != undefined && !isTherePieceInSquare(chessboard[x][y + yCoordinateDifference])) {
         result.push(chessboard[x][y + yCoordinateDifference])
         if (chessboard[x] != undefined && chessboard[x][y + yCoordinateDifference * 2] != undefined && !isTherePieceInSquare(chessboard[x][y + yCoordinateDifference * 2]))
             result.push(chessboard[x][y + yCoordinateDifference * 2])
     }
+    return result
+}
+
+function checkMoveForKnight(knight, square) {
+    if (getAvailableSquaresForKnight(knight, knight.parentNode).includes(square))
+        return true
+    else return false
+}
+
+function getAvailableSquaresForKnight(knight, square) {
+    let result = []
+    let x = parseInt(square.id[0])
+    let y = parseInt(square.id[1])
+    for (let i = - 1; i <= 1; i += 2) {
+        for (let j = -1; j <= 1; j += 2) {
+            if(chessboard[x + i] != undefined) {
+                if (chessboard[x + i][y + j * 2] != undefined)
+                    result.push(chessboard[x + i][y + j * 2])
+            if(chessboard[x + i * 2] != undefined)
+                if (chessboard[x + i * 2][y + j] != undefined)
+                    result.push(chessboard[x + i * 2][y + j])
+            }
+        }
+    }
+    result.forEach(move => {
+        if (move.firstChild != null)
+            if (getColor(move.firstChild) == getColor(knight))
+                delete result[result.indexOf(move)]
+    })
     return result
 }
 //hay que arreglar
