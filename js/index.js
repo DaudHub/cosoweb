@@ -141,17 +141,18 @@ function getAvailableSquaresForBishop(bishop) {
     let square = bishop.parentNode
     let x = parseInt(square.id[0])
     let y = parseInt(square.id[1])
-    loopDownRight: for (let i = 0; true; i++) {
-        if (chessboard[i] == undefined) break loopDownRight
-        else if (chessboard[i][i] == undefined) break loopDownRight
-        else if (getColor(chessboard[i][i].firstChild) == getColor(bishop)) break loopDownRight
-        else if (getColor(chessboard[i][i].firstChild) != getColor(bishop)) {
-            result.push(chessboard[i][i])
-            break loopDownRight
-        }
-        else result.push(chessboard[i][i])
+    for (let i = 0; true; i++) {
+        if (chessboard[i] != undefined) {
+            if (chessboard[i][i] != undefined) {
+                if (chessboard[i][i].firstChild != null) {
+                    if (getColor(chessboard[i][i].firstChild) != getColor(bishop)) {
+                        result.push(chessboard[i][i])
+                        break
+                    } else break
+                } else result.push(chessboard[i][i])
+            } else break
+        } else break
     }
-    
     return result
 }
 
