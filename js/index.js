@@ -58,12 +58,14 @@ chessboard.forEach(column => {
             if (dropped.getAttribute('class').split('-')[1] == 'pawn') delegate = checkMoveForPawn
             else if (dropped.getAttribute('class').split('-')[1] == 'knight') delegate = checkMoveForKnight
             else if (dropped.getAttribute('class').split('-')[1] == 'bishop') delegate = checkMoveForBishop
+            else if (dropped.getAttribute('class').split('-')[1] == 'rook') delegate = checkMoveForRook
+            else if (dropped.getAttribute('class').split('-')[1] == 'queen') delegate = checkMoveForQueen
             if(delegate(dropped, square)) {
                 if (square.firstChild == null && event.target == square)
-                    square.appendChild(dropped)
+                square.appendChild(dropped)
                 else if (event.target != dropped)
                     square.replaceChild(dropped, square.firstChild)
-            }
+            } else console.log('jugada incorrecta')
         })
         square.addEventListener('dragover', event => {
             event.preventDefault()
@@ -79,9 +81,9 @@ function checkMoveForPawn(pawn, targetSquare) {
 
 function getAvailableSquaresForPawn(pawn) {
     let result = []
-    let square = pawn.parentNode
-    let x = parseInt(square.id[0])
-    let y = parseInt(square.id[1])
+    let currentSquare = pawn.parentNode
+    let x = parseInt(currentSquare.id[0])
+    let y = parseInt(currentSquare.id[1])
     console.log(x)
     console.log(y)
     let yCoordinateDifference = (getColor(pawn) == 'white') ? -1 : 1
@@ -108,9 +110,9 @@ function checkMoveForKnight(knight, targetSquare) {
 
 function getAvailableSquaresForKnight(knight) {
     let result = []
-    let square = knight.parentNode
-    let x = parseInt(square.id[0])
-    let y = parseInt(square.id[1])
+    let currentSquare = knight.parentNode
+    let x = parseInt(currentSquare.id[0])
+    let y = parseInt(currentSquare.id[1])
     for (let i = - 1; i <= 1; i += 2) {
         for (let j = -1; j <= 1; j += 2) {
             if(chessboard[x + i] != undefined) {
@@ -138,22 +140,101 @@ function checkMoveForBishop(bishop, targetSquare) {
 
 function getAvailableSquaresForBishop(bishop) {
     let result = []
-    let square = bishop.parentNode
-    let x = parseInt(square.id[0])
-    let y = parseInt(square.id[1])
-    for (let i = 0; true; i++) {
-        if (chessboard[i] != undefined) {
-            if (chessboard[i][i] != undefined) {
-                if (chessboard[i][i].firstChild != null) {
-                    if (getColor(chessboard[i][i].firstChild) != getColor(bishop)) {
-                        result.push(chessboard[i][i])
-                        break
-                    } else break
-                } else result.push(chessboard[i][i])
+    let currentSquare = bishop.parentNode
+    let x = parseInt(currentSquare.id[0])
+    let y = parseInt(currentSquare.id[1])
+    for (let i = 1; chessboard[x + i] != undefined && chessboard[x + i][y + i] != undefined; i++) {
+        if (isTherePieceInSquare(chessboard[x + i][y + i])) {
+            if (getColor(chessboard[x + i][y + i].firstChild) != getColor(bishop)) {
+                result.push(chessboard[x + i][y + i])
+                break
             } else break
-        } else break
+        }
+        result.push(chessboard[x + i][y + i])
+    }
+    for (let i = 1; chessboard[x + i] != undefined && chessboard[x + i][y - i] != undefined; i++) {
+        if (isTherePieceInSquare(chessboard[x + i][y - i])) {            
+            if (getColor(chessboard[x + i][y - i].firstChild) != getColor(bishop)) {
+                result.push(chessboard[x + i][y - i])
+                break
+            } else break
+        }
+        result.push(chessboard[x + i][y - i])
+    }
+    for (let i = 1; chessboard[x - i] != undefined && chessboard[x - i][y + i] != undefined; i++) {
+        if (isTherePieceInSquare(chessboard[x - i][y + i])) {            
+            if (getColor(chessboard[x - i][y + i].firstChild) != getColor(bishop)) {
+                result.push(chessboard[x - i][y + i])
+                break
+            } else break
+        }
+        result.push(chessboard[x - i][y + i])
+    }
+    for (let i = 1; chessboard[x - i] != undefined && chessboard[x - i][y - i] != undefined; i++) {
+        if (isTherePieceInSquare(chessboard[x - i][y - i])) {            
+            if (getColor(chessboard[x - i][y - i].firstChild) != getColor(bishop)) {
+                result.push(chessboard[x - i][y - i])
+                break
+            } else break
+        }
+        result.push(chessboard[x - i][y - i])
     }
     return result
+}
+
+function checkMoveForRook(rook, targetSquare) {
+    if (getAvailableSquaresForRook(rook).includes(targetSquare))
+        return true
+    else return false
+}
+
+function getAvailableSquaresForRook(rook) {
+    let result = []
+    let currentSquare = rook.parentNode
+    let x = parseInt(currentSquare.id[0])
+    let y = parseInt(currentSquare.id[1])
+    for(let i = 1; chessboard[x + i] != undefined && chessboard[x + i][i] != undefined; i++) {
+        if(isTherePieceInSquare(chessboard[x + i][y])) {
+            if (getColor(chessboard[x + i][y].firstChild) != getColor(rook)) {
+                result.push(chessboard[x + i][y])
+                break
+            } else break
+        }
+        result.push(chessboard[x + i][y])
+    }
+    for(let i = 1; chessboard[x - i] != undefined && chessboard[x - i][y] != undefined; i++) {
+        if(isTherePieceInSquare(chessboard[x - i][y])) {
+            if (getColor(chessboard[x - i][y].firstChild) != getColor(rook)) {
+                result.push(chessboard[x - i][y])
+                break
+            } else break
+        }
+        result.push(chessboard[x - i][y])
+    }
+    for(let i = 1; chessboard[x] != undefined && chessboard[x][y + i] != undefined; i++) {
+        if(isTherePieceInSquare(chessboard[x][y + i])) {
+            if (getColor(chessboard[x][y + i].firstChild) != getColor(rook)) {
+                result.push(chessboard[x][y + i])
+                break
+            } else break
+        }
+        result.push(chessboard[x][y + i])
+    }
+    for(let i = 1; chessboard[x] != undefined && chessboard[x][y - i] != undefined; i++) {
+        if(isTherePieceInSquare(chessboard[x][y - i])) {
+            if (getColor(chessboard[x][y - i].firstChild) != getColor(rook)) {
+                result.push(chessboard[x][y - i])
+                break
+            } else break
+        }
+        result.push(chessboard[x][y - i])
+    }
+    return result
+}
+
+function checkMoveForQueen(queen, targetSquare) {
+    if (getAvailableSquaresForRook(queen).concat(getAvailableSquaresForBishop(queen)).includes(targetSquare)) return true
+    else return false
 }
 
 function getColor(piece) {

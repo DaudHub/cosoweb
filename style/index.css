@@ -4,6 +4,8 @@
     grid-template-columns: repeat(8, 1fr);
     width: 40vw;
     height: 40vw;
+    min-width: 400px;
+    min-height: 400px;
     border: 2px solid black;
 }
 
@@ -19,6 +21,8 @@
     display: block;
     width: 5vw;
     height: 5vw;
+    min-width: 50px;
+    min-height: 50px;
     object-fit: contain;
 }
 
