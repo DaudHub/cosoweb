@@ -1,5 +1,5 @@
 #chessboard {
-    position: absolute;
+    position: relative;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     width: 40vw;
