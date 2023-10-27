@@ -37,57 +37,59 @@ for(let color = 0; color < 2; color++) {
     }
 }
 
-function buildChessboard() {
+pieces.forEach(piece => {
+    let displayedPiece = document.createElement('img')
+    displayedPiece.setAttribute('id', `${piece.origin.x},${piece.origin.y}`)
+    displayedPiece.setAttribute('class', `${piece.color}-${piece.type}`)
+    displayedPiece.setAttribute('src', `../img/${piece.color}-${piece.type}.png`)
+    displayedPiece.setAttribute('draggable', 'true')
+    chessboard[piece.origin.x][piece.origin.y].appendChild(displayedPiece)
+})
 
-    for (let i = 0; i < 8; i++) {
-        chessboard[i].forEach(square => {
-            if (square.firstChild != null)
-                square.removeChild(square.firstChild)
+chessboard.forEach(column => {
+    column.forEach(square => {
+        let piece = square.firstChild
+        if (piece != null) piece.addEventListener('dragstart', event => {
+            event.dataTransfer.setData("text", event.target.id)
         })
-    }
-
-    pieces.forEach(piece => {
-        let displayedPiece = document.createElement('img')
-        displayedPiece.setAttribute('id', `${piece.origin.x},${piece.origin.y}`)
-        displayedPiece.setAttribute('class', `${piece.color}-${piece.type}`)
-        displayedPiece.setAttribute('src', `../img/${piece.color}-${piece.type}.png`)
-        displayedPiece.setAttribute('draggable', 'true')
-        chessboard[piece.origin.x][piece.origin.y].appendChild(displayedPiece)
-    })
-
-    chessboard.forEach(column => {
-        column.forEach(square => {
-            let piece = square.firstChild
-            if (piece != null) piece.addEventListener('dragstart', event => {
-                event.dataTransfer.setData("text", event.target.id)
-            })
-            square.addEventListener('drop', event => {
-                event.preventDefault()
-                let dropped = document.getElementById(event.dataTransfer.getData('text'))
-                console.log(dropped)
-                let delegate
-                if (dropped.getAttribute('class').split('-')[1] == 'pawn') delegate = checkMoveForPawn
-                else if (dropped.getAttribute('class').split('-')[1] == 'knight') delegate = checkMoveForKnight
-                else if (dropped.getAttribute('class').split('-')[1] == 'bishop') delegate = checkMoveForBishop
-                else if (dropped.getAttribute('class').split('-')[1] == 'rook') delegate = checkMoveForRook
-                else if (dropped.getAttribute('class').split('-')[1] == 'queen') delegate = checkMoveForQueen
-                else if (dropped.getAttribute('class').split('-')[1] == 'king') delegate = checkMoveForKing
-                if(delegate(dropped, square)) {
-                    changeRightToMove()
-                    if (square.firstChild == null && event.target == square)
-                        square.appendChild(dropped)
-                    else if (event.target != dropped)
-                        square.replaceChild(dropped, square.firstChild)
-                } else console.log('jugada incorrecta')
-            })
-            square.addEventListener('dragover', event => {
-                event.preventDefault()
-            })
+        square.addEventListener('drop', event => {
+            event.preventDefault()
+            let dropped = document.getElementById(event.dataTransfer.getData('text'))
+            console.log(dropped)
+            let delegate
+            if (dropped.getAttribute('class').split('-')[1] == 'pawn') delegate = checkMoveForPawn
+            else if (dropped.getAttribute('class').split('-')[1] == 'knight') delegate = checkMoveForKnight
+            else if (dropped.getAttribute('class').split('-')[1] == 'bishop') delegate = checkMoveForBishop
+            else if (dropped.getAttribute('class').split('-')[1] == 'rook') delegate = checkMoveForRook
+            else if (dropped.getAttribute('class').split('-')[1] == 'queen') delegate = checkMoveForQueen
+            else if (dropped.getAttribute('class').split('-')[1] == 'king') delegate = checkMoveForKing
+            if(delegate(dropped, square)) {
+                changeRightToMove()
+                if (square.firstChild == null && event.target == square)
+                    square.appendChild(dropped)
+                else if (event.target != dropped)
+                    square.replaceChild(dropped, square.firstChild)
+            } else console.log('jugada incorrecta')
+        })
+        square.addEventListener('dragover', event => {
+            event.preventDefault()
         })
     })
+})
+
+const socket = new WebSocket('ws://localhost:80')
+
+socket.onopen = async () => {
+    
 }
 
-buildChessboard()
+async function waitForMessage() {
+    let promise = new Promise((res, rej) => {
+        socket.once = (message) => resolve(message)
+        socket.error = (error) => reject (error)
+    })
+    return promise
+}
 
 function checkMoveForPawn(pawn, targetSquare) {
     if (getAvailableSquaresForPawn(pawn).includes(targetSquare) && getColor(pawn) == turn)
