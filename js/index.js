@@ -71,7 +71,10 @@ chessboard.forEach(column => {
             console.log(move.piece)
             let response = JSON.parse(await waitForResponse(JSON.stringify(move)))
             if (response.authorized == true) {
-                square.replaceChild(dropped, square.firstChild)
+                if (square.firstChild == null && event.target == square)
+                    square.appendChild(dropped)
+                else if (event.target != dropped)
+                    square.replaceChild(dropped, square.firstChild)
             }
         })
         square.addEventListener('dragover', event => {
