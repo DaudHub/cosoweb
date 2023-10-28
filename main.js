@@ -162,7 +162,40 @@ function getAvailableSquaresForBishop(bishop) {
     return result
 }
 
-function checkMoveForKnight() {}
+function checkMoveForKnight(knight, targetSquare) {
+    for (let square of getAvailableSquaresForKnight(knight)) {
+        if (square != undefined) {
+            if (square.x != targetSquare.x) continue
+            if (square.y != targetSquare.y) continue
+            if (turn != knight.color) continue
+            return true
+        }
+    }
+    return false
+}
+
+function getAvailableSquaresForKnight(knight) {
+    let result = []
+    let x = findColumnIndex(knight)
+    let y = findRowIndex(knight)
+    for (let i = - 1; i <= 1; i += 2) {
+        for (let j = -1; j <= 1; j += 2) {
+            if(chessboard[x + i] != undefined) {
+                if (chessboard[x + i][y + j * 2] != undefined)
+                    result.push({ x: x + i, y: y + j * 2 })
+            if(chessboard[x + i * 2] != undefined)
+                if (chessboard[x + i * 2][y + j] != undefined)
+                    result.push({ x: x + i * 2, y: y + j })
+            }
+        }
+    }
+    result.forEach(square => {
+        if (square.piece != null)
+            if (square.piece.color == knight.color)
+                delete result[result.indexOf(square)]
+    })
+    return result
+}
 
 function checkMoveForRook() {}
 
