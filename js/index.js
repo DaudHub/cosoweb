@@ -43,8 +43,11 @@ pieces.forEach(piece => {
     displayedPiece.setAttribute('class', `${piece.color}-${piece.type}`)
     displayedPiece.setAttribute('src', `../img/${piece.color}-${piece.type}.png`)
     displayedPiece.setAttribute('draggable', 'true')
+    displayedPiece.origin = piece.origin
     chessboard[piece.origin.x][piece.origin.y].appendChild(displayedPiece)
 })
+
+const socket = new WebSocket('ws://localhost:80')
 
 chessboard.forEach(column => {
     column.forEach(square => {
@@ -52,24 +55,24 @@ chessboard.forEach(column => {
         if (piece != null) piece.addEventListener('dragstart', event => {
             event.dataTransfer.setData("text", event.target.id)
         })
-        square.addEventListener('drop', event => {
+        square.addEventListener('drop', async (event) => {
             event.preventDefault()
             let dropped = document.getElementById(event.dataTransfer.getData('text'))
             console.log(dropped)
-            let delegate
-            if (dropped.getAttribute('class').split('-')[1] == 'pawn') delegate = checkMoveForPawn
-            else if (dropped.getAttribute('class').split('-')[1] == 'knight') delegate = checkMoveForKnight
-            else if (dropped.getAttribute('class').split('-')[1] == 'bishop') delegate = checkMoveForBishop
-            else if (dropped.getAttribute('class').split('-')[1] == 'rook') delegate = checkMoveForRook
-            else if (dropped.getAttribute('class').split('-')[1] == 'queen') delegate = checkMoveForQueen
-            else if (dropped.getAttribute('class').split('-')[1] == 'king') delegate = checkMoveForKing
-            if(delegate(dropped, square)) {
-                changeRightToMove()
-                if (square.firstChild == null && event.target == square)
-                    square.appendChild(dropped)
-                else if (event.target != dropped)
-                    square.replaceChild(dropped, square.firstChild)
-            } else console.log('jugada incorrecta')
+            square.coordinates = { x: parseInt(square.id[0]), y: parseInt(square.id[1]) }
+            let move = { 
+                piece: { 
+                    type: `${dropped.getAttribute('class').split('-')[1]}`,
+                    color: `${dropped.getAttribute('class').split('-')[0]}`,
+                    origin: dropped.origin
+                },
+                targetSquare: square.coordinates
+            }
+            console.log(move.piece)
+            let response = JSON.parse(await waitForResponse(JSON.stringify(move)))
+            if (response.authorized == true) {
+                square.replaceChild(dropped, square.firstChild)
+            }
         })
         square.addEventListener('dragover', event => {
             event.preventDefault()
@@ -77,16 +80,24 @@ chessboard.forEach(column => {
     })
 })
 
-const socket = new WebSocket('ws://localhost:80')
-
-socket.onopen = async () => {
-    
-}
-
-async function waitForMessage() {
-    let promise = new Promise((res, rej) => {
-        socket.once = (message) => resolve(message)
-        socket.error = (error) => reject (error)
+function waitForResponse(data) {
+    let promise = new Promise((resolve, reject) => {
+        socket.onmessage = onMessage
+        socket.onerror = (error) => reject(error)
+        function onMessage(message) {
+            console.log(message)
+            resolve(message.data)
+            removeListeners()
+        }
+        function onError(error) {
+            reject(error)
+            removeListeners()
+        }
+        function removeListeners() {
+            socket.onmessage = null
+            socket.onmessage = null
+        }
+        socket.send(data)
     })
     return promise
 }

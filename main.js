@@ -14,6 +14,7 @@ wss.on('connection', (ws, req) => {
 
     ws.on('message', async (message) => {
         let move = JSON.parse(message)
+        console.log(move)
         response = await handleMoveRequest(move)
         ws.send(JSON.stringify(response))
     })
@@ -33,18 +34,18 @@ var turn = 'white'
 
 for(let color = 0; color < 2; color++) {
     for(var j = 0; j < 8; j++) {
-        pieces.push({type: 'pawn', color: colors[color], origin: {x: j, y: (color == 0 ? 6 : 1), delegate: checkMoveForPawn}})
+        pieces.push({type: 'pawn', color: colors[color], origin: {x: j, y: (color == 0 ? 6 : 1)}})
     }
-    pieces.push({type: 'king', color: colors[color], origin: {x: 4, y: (color == 0 ? 7 : 0)}, delegate: checkMoveForKing})
-    pieces.push({type: 'queen', color: colors[color], origin: {x: 3, y: (color == 0 ? 7 : 0)}, delegate: checkMoveForQueen})
+    pieces.push({type: 'king', color: colors[color], origin: {x: 4, y: (color == 0 ? 7 : 0)}})
+    pieces.push({type: 'queen', color: colors[color], origin: {x: 3, y: (color == 0 ? 7 : 0)}})
     for(var j = 2; j < 6; j += 3) {
-        pieces.push({type: 'bishop', color: colors[color], origin: {x: j, y: (color == 0 ? 7 : 0)}, delegate: checkMoveForBishop})
+        pieces.push({type: 'bishop', color: colors[color], origin: {x: j, y: (color == 0 ? 7 : 0)}})
     }
     for(var j = 1; j < 7; j += 5) {
-        pieces.push({type: 'knight', color: colors[color], origin: {x: j, y: (color == 0 ? 7 : 0)}, delegate: checkMoveForKnight})
+        pieces.push({type: 'knight', color: colors[color], origin: {x: j, y: (color == 0 ? 7 : 0)}})
     }
     for(var j = 0; j < 8; j += 7) {
-        pieces.push({type: 'rook', color: colors[color], origin: {x: j, y: (color == 0 ? 7 : 0)}, delegate: checkMoveForRook})
+        pieces.push({type: 'rook', color: colors[color], origin: {x: j, y: (color == 0 ? 7 : 0)}})
     }
 }
 
@@ -53,11 +54,19 @@ for (let piece of pieces) {
 }
 
 async function handleMoveRequest(move) {
-    if (piece.delegate(move.piece, move.targetSquare)) {
+    let delegate
+    if (move.piece.type == 'pawn') delegate = checkMoveForPawn
+    else if (move.piece.type == 'bishop') delegate = checkMoveForBishop
+    else if (move.piece.type == 'knight') delegate = checkMoveForKnight
+    else if (move.piece.type == 'rook') delegate = checkMoveForRook
+    else if (move.piece.type == 'queen') delegate = checkMoveForQueen
+    else if (move.piece.type == 'king') delegate = checkMoveForKing
+    if (delegate(move.piece, move.targetSquare)) {
         return {
             authorized: true
         }
     }
+    else return { authorized: false }
 }
 
 function checkMoveForPawn(pawn, targetSquare) {
@@ -68,7 +77,9 @@ function checkMoveForPawn(pawn, targetSquare) {
 
 function getAvailableSquaresForPawn(pawn) {
     let result = []
+    console.log(findColumn(pawn))
     let x = chessboard.indexOf(findColumn(pawn))
+    console.log(x)
     let y = chessboard[x].indexOf(findRow(pawn))
     console.log(x)
     console.log(y)
@@ -99,27 +110,35 @@ function checkMoveForQueen() {}
 function checkMoveForKing() {}
 
 function findRow(piece) {
-    for (let row of chessboard[findColumn(piece)])
-        if (row.contains(piece)) return row
+    for (let square of chessboard[findColumnIndex(piece)])
+        if (square != undefined) {
+            if (square.type != piece.type) continue
+                if (square.color != piece.color) continue
+                if (square.origin.x != piece.origin.x || square.origin.y != piece.origin.y) continue
+                return square
+        }
     return null
 }
 
 function findRowIndex(piece) {
-    for (let row of chessboard[findColumn(piece)])
-        if (row.contains(piece)) return chessboard[findColumn(piece)].indexOf(row)
-    return null
+    return chessboard[findColumnIndex(piece)].indexOf(findRow(piece))
 }
 
 function findColumn(piece) {
     for(let column of chessboard)
-        if (column.contains(piece)) return column
+        for (let square of column) {
+            if (square != undefined) {
+                if (square.type != piece.type) continue
+                if (square.color != piece.color) continue
+                if (square.origin.x != piece.origin.x || square.origin.y != piece.origin.y) continue
+                return column
+            }
+        }
     return null
 }
 
 function findColumnIndex(piece) {
-    for(let column of chessboard)
-        if (column.contains(piece)) return chessboard.indexOf(column)
-    else return null
+    return chessboard.indexOf(findColumn(piece))
 }
 
 function isTherePieceInSquare(square) {
@@ -128,7 +147,7 @@ function isTherePieceInSquare(square) {
 }
 
 function getPiecePosition(piece) {
-    let x = chessboard.indexOf(findColumn(pawn))
-    let y = chessboard[x].indexOf(findRow(pawn))
+    let x = findColumnIndex(piece)
+    let y = findRowIndex(piece)
     return {x: x, y: y}
 }

@@ -1,9 +1,8 @@
 class Piece {
-    constructor(type, color, origin, delegate) {
+    constructor(type, color, origin) {
         this.type = type
         this.color = color
         this.origin = origin
-        this.delegate = delegate
     }
 }
 
