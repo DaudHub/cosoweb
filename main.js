@@ -197,11 +197,103 @@ function getAvailableSquaresForKnight(knight) {
     return result
 }
 
-function checkMoveForRook() {}
+function checkMoveForRook(rook, targetSquare) {
+    for (let square of getAvailableSquaresForRook(rook)) {
+        if (square != undefined) {
+            if (square.x != targetSquare.x) continue
+            if (square.y != targetSquare.y) continue
+            if (turn != rook.color) continue
+            return true
+        }
+    }
+    return false
+}
 
-function checkMoveForQueen() {}
+function getAvailableSquaresForRook(rook) {
+    let result = []
+    let x = findColumnIndex(rook)
+    let y = findRowIndex(rook)
+    for(let i = 1; chessboard[x + i] != undefined && chessboard[x + i][y] != undefined; i++) {
+        if(isTherePieceInSquare({x: x + i, y: y})) {
+            if (chessboard[x + i][y].piece.color != rook.color) {
+                result.push({x: x + i, y: y})
+                break
+            } else break
+        }
+        result.push({x: x + i, y: y})
+    }
+    for(let i = 1; chessboard[x - i] != undefined && chessboard[x - i][y] != undefined; i++) {
+        if(isTherePieceInSquare({x: x - i, y: y})) {
+            if (chessboard[x - i][y].piece.color != rook.color) {
+                result.push({x: x - i, y: y})
+                break
+            } else break
+        }
+        result.push({x: x - i, y: y})
+    }
+    for(let i = 1; chessboard[x] != undefined && chessboard[x][y + i] != undefined; i++) {
+        if(isTherePieceInSquare({ x: x, y: y + i })) {
+            if (chessboard[x][y + i].piece.color != rook.color) {
+                result.push({ x: x, y: y + i })
+                break
+            } else break
+        }
+        result.push({ x: x, y: y + i })
+    }
+    for(let i = 1; chessboard[x] != undefined && chessboard[x][y - i] != undefined; i++) {
+        if(isTherePieceInSquare({ x: x, y: y - i })) {
+            if (chessboard[x][y - i].piece.color != rook.color) {
+                result.push({ x: x, y: y - i })
+                break
+            } else break
+        }
+        result.push({ x: x, y: y - i })
+    }
+    return result
+}
 
-function checkMoveForKing() {}
+function checkMoveForQueen(queen, targetSquare) {
+    for (let square of getAvailableSquaresForQueen(queen)) {
+        if (square != undefined) {
+            if (square.x != targetSquare.x) continue
+            if (square.y != targetSquare.y) continue
+            if (turn != queen.color) continue
+            return true
+        }
+    }
+    return false
+}
+
+function getAvailableSquaresForQueen(queen) {
+    return getAvailableSquaresForRook(queen).concat(getAvailableSquaresForBishop(queen))
+}
+
+function checkMoveForKing(king, targetSquare) {
+    for (let square of getAvailableSquaresForKing(king)) {
+        if (square != undefined) {
+            if (square.x != targetSquare.x) continue
+            if (square.y != targetSquare.y) continue
+            if (turn != king.color) continue
+            return true
+        }
+    }
+    return false
+}
+
+function getAvailableSquaresForKing(king) {
+    let result = []
+    let x = findColumnIndex(king)
+    let y = findRowIndex(king)
+    for (let i = -1; i < 2; i++) for (let j = -1; j < 2; j++) {
+        if (chessboard[x + i] != undefined && chessboard[x + i][y + j] != undefined && (x != 0 || y != 0))
+            result.push({ x: x + i, y: y + j })
+    }
+    result.forEach(square => {
+        if (isTherePieceInSquare(square) && chessboard[square.x][square.y].piece.color == king.color)
+            delete result[result.indexOf(square)]
+    })
+    return result
+}
 
 function findRow(piece) {
     for (let square of chessboard[findColumnIndex(piece)])
