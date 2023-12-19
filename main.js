@@ -2,7 +2,8 @@ const express = require('express')
 const http = require('http')
 const WebSocket = require('ws')
 const url = require('url')
-const mysql = require('mysql')
+const { randomInt } = require('crypto')
+const { json } = require('body-parser')
 
 const app = express()
 const server = http.createServer(app)
@@ -10,55 +11,45 @@ const wss = new WebSocket.Server({server})
 
 server.listen(80, () => { console.log('listening...') })
 
+var games = []
+
 wss.on('connection', async (ws, req) => {
     console.log(`client connected at ${req.socket.remoteAddress}`)
+    console.log(req.url)
+    console.log(req.url == '/new')
     if (req.url == '/new')
-        connectionHandler(ws, req)
+        await createGameInstance(ws, req)
+    else if (req.url == '/join')
+        await joinGameInstance(ws, req)
     else {
         ws.terminate()
         console.log(`client ${req.socket.remoteAddress} kicked`)
     }
-    console.log('hola')
+    ws.on('close', () => {
+        console.log(`client at ${req.socket.remoteAddress} disconnected`)
+    })
 })
 
-async function connectionHandler(ws, req) {
-    await new Promise(async (resolve, reject) => {
-        try {
-            let connection = mysql.createConnection({
-                host: 'localhost',
-                user: 'root',
-                password: 'porfavorentrar',
-                database: 'chess'
-            })
-            connection.query('insert into games default values', (error, results, fields) => {
-                if (error) {
-                    ws.send(JSON.stringify({ gameCreated: false }))
-                    resolve()
-                }
-            })
-            await waitForSecondPlayer(ws, req)
-            resolve()
-        }
-        catch {
-            ws.send(JSON.stringify({ gameCreated: false }))
-            resolve()
-        }
-        finally {
-            connection.destroy()
-        }
+async function createGameInstance(ws, req) {
+    do {
+        var id = randomInt(10000)
+    } while (games[id] != undefined)
+    games.push({
+        id: id,
+        firstPlayer: ws,
+        firstPlayerRequest: req
     })
+    console.log(id)
 }
 
-async function waitForSecondPlayer(ws, req) {
-    return new Promise((resolve, reject) => {
-        wss.once('connection', async (ws2, req2) => {
-            await game(ws, ws2, req, req2)
-        })
-    })
+async function joinGameInstance(ws, req) {
+    games[req.params.id].secondPlayer = ws
+    games[req.params.id].secondPlayerRequest = req
+    game(games[req.params.id].firstPlayer, ws, games[req.params.id].firstPlayerRequest, req)
 }
 
 async function game(player1, player2, req1, req2) {
-    return await new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
 
         player1.color = 'white'
         player2.color = 'black'
@@ -66,13 +57,13 @@ async function game(player1, player2, req1, req2) {
         player1.on('message', async (message) => {
             let move = JSON.parse(message)
             response = await handleMoveRequest(player1, move)
-            ws.send(JSON.stringify(response))
+            player1.send(JSON.stringify(response))
         })
 
         player2.on('message', async (message) => {
             let move = JSON.parse(message)
             response = await handleMoveRequest(player2, move)
-            ws.send(JSON.stringify(response))
+            player2.send(JSON.stringify(response))
         })
 
         player1.on('close', () => {
@@ -131,7 +122,9 @@ async function game(player1, player2, req1, req2) {
                     authorized: true
                 }
             }
-            else return { authorized: false }
+            else return {
+                authorized: false
+            }
         }
     
         function checkMove(player, piece, targetSquare) {
